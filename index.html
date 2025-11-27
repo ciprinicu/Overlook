@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Overlook</title>
+    <style>
+        body {
+            background-color: #1e1e1e;
+            color: #f0f0f0;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 15px;
+            user-select: none;
+        }
+
+        h3 {
+            border-bottom: 2px solid #0078d7;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        button {
+            border: none;
+            padding: 10px;
+            width: 100%;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            transition: 0.2s;
+        }
+
+        #btnAdd {
+            background: #2d8c5e;
+            color: white;
+        }
+
+        #btnAdd:hover {
+            background: #236e4a;
+        }
+
+        #btnDelete {
+            background: #a82e2e;
+            color: white;
+            margin-top: 20px;
+        }
+
+        #btnDelete:hover {
+            background: #822222;
+        }
+
+        .watcher-item {
+            background: #2d2d2d;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-left: 4px solid #0078d7;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 2px;
+        }
+
+        .watcher-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .bin-tag {
+            color: #4cc9f0;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .path-tag {
+            color: #888;
+            font-size: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .remove-btn {
+            color: #ff4d4d;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 5px;
+            margin-left: 10px;
+        }
+
+        .remove-btn:hover {
+            color: #ff0000;
+        }
+
+        #status {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h3>Overlook <span style="font-size: 0.6em; color: #666;">v2.0</span></h3>
+
+    <button id="btnAdd">➕ Adaugă Folder la Sync</button>
+    <div id="listaPaza"></div>
+    <div id="status">Ready.</div>
+
+    <button id="btnDelete">☢️ Șterge Selecția de pe Disk</button>
+
+    <script src="js/CSInterface.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>
