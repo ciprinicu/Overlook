@@ -30,46 +30,77 @@ function importFileSafe(filePath, binName) {
     }
 }
 
-// --- LOGICA DE DUPLICATE ---
-function isMediaAlreadyInBin(bin, sourcePath, sourceFileName) {
-    // 1. Pregătim numele de pe hard (fără extensie)
-    // Ex: "Vacanța_2023.mp4" -> "Vacanța_2023"
-    var sourceBase = removeExtension(sourceFileName).toLowerCase();
+// Funcția care vorbește cu sistemul de notificări Adobe
+function showNativeNotification(message, type) {
+    // type poate fi: 'info', 'warning', 'error'
+    // 'warning' apare galben și e cel mai vizibil
+    // 'error' apare roșu
+    // 'info' apare doar în Events Panel (uneori nu dă pop-up)
     
-    // Pregătim și calea full (Planul A - cel mai sigur)
-    var normalizedSourcePath = sourcePath.toString().replace(/\\/g, "/").toLowerCase();
+    var eventType = 'info';
+    if (type === 'error') eventType = 'error';
+    if (type === 'warning') eventType = 'warning';
+
+    // Asta e comanda magică
+    if(!app.setSDKEventMessage(message, eventType)) console.error("setSDKEventMessage failed.");
+}
+
+// --- LOGICA DE DUPLICATE ---
+function importFileWithBin(filePath, binName) {
+    try {
+        app.enableQE(); 
+        if (!app.project) return "Nu ai proiect deschis";
+
+        var targetBin = findOrCreateBin(binName);
+        
+        if (targetBin) {
+            // Extragem doar numele fisierului (ex: "carmen.png")
+            var simpleFileName = filePath.replace(/\\/g, "/").split('/').pop();
+
+            // VERIFICARE DUBLĂ (Cale SAU Nume)
+            if (isMediaAlreadyInBin(targetBin, filePath, simpleFileName)) {
+                return "Skipped (Exists)";
+            }
+
+            var importSuccess = app.project.importFiles([filePath], 1, targetBin, 0);
+            return importSuccess ? "Success" : "Fail la import";
+        } 
+    } catch (err) {
+        // alert("Eroare: " + err.toString());
+    }
+}
+
+function isMediaAlreadyInBin(bin, sourcePath, simpleFileName) {
+    // 1. Pregătim calea de pe disk pentru comparație
+    var normalizedSource = sourcePath.toString().replace(/\\/g, "/").toLowerCase();
+    // 2. Pregătim numele simplu (pentru planul B)
+    var normalizedName = simpleFileName.toString().toLowerCase();
 
     for (var i = 0; i < bin.children.numItems; i++) {
         var item = bin.children[i];
         
         if (item.type === 1) { // Doar clipuri
             
-            // --- VERIFICAREA 1: CALEA (CNP-ul) ---
+            // --- VERIFICAREA 1: CALEA (PATH) ---
             var itemPath = item.getMediaPath();
             if (itemPath) {
-                var normalizedItemPath = decodeURIComponent(itemPath.toString()).replace(/\\/g, "/").toLowerCase();
-                if (normalizedItemPath === normalizedSourcePath) return true;
+                var decodedPath = decodeURIComponent(itemPath.toString());
+                var normalizedItemPath = decodedPath.replace(/\\/g, "/").toLowerCase();
+                
+                if (normalizedItemPath === normalizedSource) {
+                    return true; // L-am găsit după cale!
+                }
             }
 
-            // --- VERIFICAREA 2: NUME SMART (Ce ai cerut tu) ---
-            var itemBase = removeExtension(item.name).toLowerCase();
-
-            // Cazul A: Nume identic (Ex: "Logo" === "Logo")
-            if (itemBase === sourceBase) {
-                return true;
-            }
-
-            // Cazul B: Nume cu sufix Adobe (Ex: "Logo_1" vs "Logo")
-            // Curățăm sufixul doar din numele itemului din Bin
-            var itemBaseCleaned = removeAdobeSuffix(itemBase);
-            
-            if (itemBaseCleaned === sourceBase) {
-                // Bingo! Itemul din Bin e doar o copie numerotată a fișierului nostru.
-                return true; 
+            // --- VERIFICAREA 2: NUMELE (PLANUL B) ---
+            // Dacă calea a eșuat (din motive dubioase), verificăm dacă are același nume.
+            // Asta te scapă de duplicatele la reload.
+            if (item.name.toLowerCase() === normalizedName) {
+                return true; // L-am găsit după nume!
             }
         }
     }
-    return false;
+    return false; // Nu e nici după cale, nici după nume -> Importă-l!
 }
 
 // Funcție care scoate extensia

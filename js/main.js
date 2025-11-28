@@ -92,6 +92,8 @@ function startChokidar(folderPath, targetBinName) {
     // Normalizăm calea pentru Adobe (slash normal /)
     const cleanPath = filePath.replace(/\\/g, "/");
 
+    console.log(cleanPath);
+
     // Update UI status
     document.getElementById("status").innerText = `Sync: ${path.basename(
       filePath
@@ -101,7 +103,48 @@ function startChokidar(folderPath, targetBinName) {
     const argPath = JSON.stringify(cleanPath);
     const argBin = JSON.stringify(targetBinName);
 
-    csInterface.evalScript(`importFileSafe(${argPath}, ${argBin})`);
+    csInterface.evalScript(
+      `importFileSafe(${argPath}, ${argBin})`,
+      (result) => {
+        const fileName = path.basename(cleanPath);
+
+        if (result === "Success") {
+          // Mesaj Nativ de la Premiere (INFO)
+          // Nota: Info apare uneori doar în Events Panel.
+          // Dacă vrei să fii sigur că se vede, poți folosi 'warning' (galben),
+          // deși e cam agresiv.
+          csInterface.evalScript(
+            `showNativeNotification("Overlook File ${fileName} imported in ${argBin}", "info")`
+          );
+
+          // Actualizăm și textul mic din panel
+          document.getElementById("status").innerText = `✅ ${fileName}`;
+        } else if (result === "Fail") {
+          // Mesaj Nativ de Eroare (ROȘU)
+          csInterface.evalScript(
+            `showNativeNotification("Eroare la import: ${fileName}", "error")`
+          );
+        }
+      }
+    );
+  });
+
+  watcher.on("unlink", (filePath) => {
+    // Normalizăm calea pentru Adobe (slash normal /)
+    const cleanPath = filePath.replace(/\\/g, "/");
+
+    console.log(cleanPath);
+
+    // Update UI status
+    document.getElementById("status").innerText = `Delete: ${path.basename(
+      filePath
+    )}`;
+
+    // Trimitem comanda securizată cu JSON.stringify
+    const argPath = JSON.stringify(cleanPath);
+    const argBin = JSON.stringify(targetBinName);
+
+    //csInterface.evalScript(`importFileSafe(${argPath}, ${argBin})`);
   });
 
   activeWatchers.push({
